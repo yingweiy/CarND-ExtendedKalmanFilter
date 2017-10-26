@@ -31,15 +31,15 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
 
     MatrixXd Hj(3,4);
     //recover state parameters
-    float px = x_state(0);
-    float py = x_state(1);
-    float vx = x_state(2);
-    float vy = x_state(3);
+    double px = x_state(0);
+    double py = x_state(1);
+    double vx = x_state(2);
+    double vy = x_state(3);
 
     //check division by zero
-    float pxy = px*px + py*py;
-    float spxy = sqrt(pxy);
-    float pxy15 = pow(pxy, 1.5);
+    double pxy = px*px + py*py;
+    double spxy = sqrt(pxy);
+    double pxy15 = pow(pxy, 1.5);
 
     if (pxy<0.000001) {
         cout << "Dividing by zero in Jacobian calculation!" << endl;

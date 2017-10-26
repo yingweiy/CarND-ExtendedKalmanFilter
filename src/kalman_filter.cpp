@@ -1,9 +1,12 @@
 #include "kalman_filter.h"
 #include <iostream>
+#define PI 3.1415926
+
 using namespace std;
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
+
 
 // Please note that the Eigen library does not initialize 
 // VectorXd or MatrixXd objects with zeros upon creation.
@@ -50,7 +53,6 @@ void KalmanFilter::Update(const VectorXd &z) {
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
   /**
-  TODO:
     * update the state by using Extended Kalman Filter equations
   */
     double px = x_(0);
@@ -59,8 +61,19 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     double vy = x_(3);
 
   VectorXd z_pred = VectorXd(3);
-    z_pred << sqrt(px*px + py*py), atan2(py, px), (px*vx+py*vy)/sqrt(px*px + py*py);
-  VectorXd y = z - z_pred;
+  VectorXd z_norm = VectorXd(3);
+  z_pred << sqrt(px*px + py*py), atan2(py, px), (px*vx+py*vy)/sqrt(px*px + py*py);
+  double phi = z(1);
+    if (phi>PI) {
+        phi = phi - 2*PI;
+    }
+    //if (phi<-PI-0.1) {
+    //    phi = phi + 2*PI;
+   // }
+  //z_norm << z(0), atan2(sin(phi), cos(phi)), z(2);
+    z_norm << z(0), phi, z(2);
+    cout << "*********************************************************" << z(1) << endl;
+  VectorXd y = z_norm - z_pred;
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_ * P_ * Ht + R_;
   MatrixXd Si = S.inverse();

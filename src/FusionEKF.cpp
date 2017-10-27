@@ -49,8 +49,8 @@ FusionEKF::FusionEKF() {
 
    //the initial transition matrix F_
   MatrixXd F_ = MatrixXd(4, 4);
-  F_ << 1, 0, 1, 0,
-        0, 1, 0, 1,
+  F_ << 1, 0, 0, 0,
+        0, 1, 0, 0,
         0, 0, 1, 0,
         0, 0, 0, 1;
 
@@ -80,9 +80,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     */
     // first measurement
     ekf_.x_ = VectorXd(4);
-    ekf_.x_ << 1, 1, 1, 1;
-
-
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       /**
@@ -90,12 +87,12 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       */
         double rho = measurement_pack.raw_measurements_(0);
         double phi = measurement_pack.raw_measurements_(1);
-        double d_phi = measurement_pack.raw_measurements_(1);
+        double d_phi = measurement_pack.raw_measurements_(2);
         double p_x = rho * cos(phi);
         double p_y = rho * sin(phi);
         //double vx = d_phi * cos(phi);
         //double vy = d_phi * sin(phi);
-        ekf_.x_ << p_x, p_y, 0, 0;
+        ekf_.x_ << p_x, p_y, 0.0, 0.0; //vx, vy;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       /**
@@ -103,6 +100,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       */
         ekf_.x_ << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1], 0, 0;
     }
+
+    previous_timestamp_ = measurement_pack.timestamp_;
 
     // done initializing, no need to predict or update
     is_initialized_ = true;
@@ -131,14 +130,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   //2. Set the process covariance matrix Q
   // set the acceleration noise components
-  float noise_ax = 5;
-  float noise_ay = 5;
   ekf_.Q_ = MatrixXd(4,4);
-  float dt4 = pow(dt, 4.0) / 4.0;
-  float dt3 = pow(dt, 3.0) / 2.0;
   float dt2 = dt*dt;
-  float ax2 = noise_ax * noise_ax;
-  float ay2 = noise_ay * noise_ay;
+  float dt3 = dt2*dt / 2.0;
+  float dt4 = dt3*dt / 2.0;
+
+  float ax2 = 9; //noise_ax * noise_ax;
+  float ay2 = 9; //noise_ay * noise_ay;
   ekf_.Q_ << dt4 * ax2, 0, dt3 * ax2, 0,
            0, dt4*ay2, 0, dt3 * ay2,
            dt3 * ax2, 0, dt2*ax2, 0,

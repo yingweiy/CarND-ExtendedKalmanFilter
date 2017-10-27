@@ -42,7 +42,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
     //check division by zero
     double pxy = px*px + py*py;
     double spxy = sqrt(pxy);
-    double pxy15 = pow(pxy, 1.5);
+    double pxy15 = pxy * spxy;
 
     if (pxy<0.000001) {
         cout << "Warining: Dividing by zero in Jacobian calculation!" << endl;

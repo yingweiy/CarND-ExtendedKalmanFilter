@@ -32,8 +32,6 @@ FusionEKF::FusionEKF() {
         0, 0.0009, 0,
         0, 0, 0.09;
 
-  ekf_ = KalmanFilter();
-
   //create a 4D state vector, we don't know yet the values of the x state
   VectorXd x_ = VectorXd(4);
 
@@ -60,7 +58,6 @@ FusionEKF::FusionEKF() {
 
   ekf_.Init(x_, P_, F_, H_laser_, R_laser_, Q_);
 
-  tools = Tools();
 
 }
 
@@ -93,8 +90,11 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       */
         double rho = measurement_pack.raw_measurements_(0);
         double phi = measurement_pack.raw_measurements_(1);
-        double p_x = rho*cos(phi);
-        double p_y = rho*sin(phi);
+        double d_phi = measurement_pack.raw_measurements_(1);
+        double p_x = rho * cos(phi);
+        double p_y = rho * sin(phi);
+        //double vx = d_phi * cos(phi);
+        //double vy = d_phi * sin(phi);
         ekf_.x_ << p_x, p_y, 0, 0;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
@@ -136,12 +136,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   ekf_.Q_ = MatrixXd(4,4);
   float dt4 = pow(dt, 4.0) / 4.0;
   float dt3 = pow(dt, 3.0) / 2.0;
+  float dt2 = dt*dt;
   float ax2 = noise_ax * noise_ax;
   float ay2 = noise_ay * noise_ay;
   ekf_.Q_ << dt4 * ax2, 0, dt3 * ax2, 0,
            0, dt4*ay2, 0, dt3 * ay2,
-           dt3 * ax2, 0, dt*dt*ax2, 0,
-           0, dt3*ay2, 0, dt*dt*ay2;
+           dt3 * ax2, 0, dt2*ax2, 0,
+           0, dt3*ay2, 0, dt2*ay2;
   ekf_.Predict();
   /*****************************************************************************
    *  Update
@@ -157,6 +158,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       ekf_.R_ = R_radar_;
       Hj_ = tools.CalculateJacobian(ekf_.x_);
       ekf_.H_ = Hj_;
+
       ekf_.UpdateEKF(measurement_pack.raw_measurements_);
   } else {
     // Laser updates

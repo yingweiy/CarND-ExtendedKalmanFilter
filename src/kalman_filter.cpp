@@ -29,10 +29,6 @@ void KalmanFilter::Predict() {
   x_ = F_ * x_;
   MatrixXd Ft = F_.transpose();
   P_ = F_ * P_ * Ft + Q_;
-
-  //for EKF
-  // x = f(x,u)
-  // F = F.jacobian()
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
@@ -59,21 +55,29 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     double py = x_(1);
     double vx  = x_(2);
     double vy = x_(3);
+    double rho = sqrt(px*px + py*py);
+
+    if (rho<0.00001)
+    {
+        rho = 1000000000; //make rho_dot = 0
+    }
 
   VectorXd z_pred = VectorXd(3);
   VectorXd z_norm = VectorXd(3);
-  z_pred << sqrt(px*px + py*py), atan2(py, px), (px*vx+py*vy)/sqrt(px*px + py*py);
-  double phi = z(1);
-    if (phi>PI) {
-        phi = phi - 2*PI;
-    }
-    //if (phi<-PI-0.1) {
-    //    phi = phi + 2*PI;
-   // }
+
+  z_pred << rho, atan2(py, px), (px*vx+py*vy)/rho;
   //z_norm << z(0), atan2(sin(phi), cos(phi)), z(2);
-    z_norm << z(0), phi, z(2);
-    cout << "*********************************************************" << z(1) << endl;
-  VectorXd y = z_norm - z_pred;
+  //z_norm << z(0), phi, z(2);
+  cout << z(1) << "," << z(2) << endl;
+  VectorXd y = z - z_pred;
+  double dy = y(1);
+  if (dy>PI) {
+        y(1) = dy - 2*PI;
+    }
+  if (dy<-PI) {
+        y(1) = dy + 2*PI;
+    }
+
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_ * P_ * Ht + R_;
   MatrixXd Si = S.inverse();

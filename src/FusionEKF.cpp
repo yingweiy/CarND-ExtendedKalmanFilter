@@ -90,9 +90,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         double d_phi = measurement_pack.raw_measurements_(2);
         double p_x = rho * cos(phi);
         double p_y = rho * sin(phi);
-        //double vx = d_phi * cos(phi);
-        //double vy = d_phi * sin(phi);
-        ekf_.x_ << p_x, p_y, 0.0, 0.0; //vx, vy;
+        double vx = d_phi * cos(phi);
+        double vy = d_phi * sin(phi);
+        ekf_.x_ << p_x, p_y, vx, vy;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       /**
@@ -135,12 +135,12 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   float dt3 = dt2*dt / 2.0;
   float dt4 = dt3*dt / 2.0;
 
-  float ax2 = 9; //noise_ax * noise_ax;
-  float ay2 = 9; //noise_ay * noise_ay;
-  ekf_.Q_ << dt4 * ax2, 0, dt3 * ax2, 0,
-           0, dt4*ay2, 0, dt3 * ay2,
-           dt3 * ax2, 0, dt2*ax2, 0,
-           0, dt3*ay2, 0, dt2*ay2;
+  float noise_ax = 9;
+  float noise_ay = 9;
+  ekf_.Q_ << dt4 * noise_ax, 0, dt3 * noise_ax, 0,
+           0, dt4*noise_ay, 0, dt3 * noise_ay,
+           dt3 * noise_ax, 0, dt2 * noise_ax, 0,
+           0, dt3 * noise_ay, 0, dt2 * noise_ay;
   ekf_.Predict();
   /*****************************************************************************
    *  Update
@@ -166,6 +166,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   }
 
   // print the output
-  //cout << "x_ = " << ekf_.x_ << endl;
-  //cout << "P_ = " << ekf_.P_ << endl;
+  cout << "x_ = " << ekf_.x_ << endl;
+  cout << "P_ = " << ekf_.P_ << endl;
 }

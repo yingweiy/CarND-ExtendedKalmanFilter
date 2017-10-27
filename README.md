@@ -65,5 +65,4 @@ OUTPUT: values provided by the c++ program to the simulator
    * On windows, you may need to run: `cmake .. -G "Unix Makefiles" && make`
 4. Run it: `./ExtendedKF `
 
-# Result
 

@@ -8,6 +8,10 @@ using Eigen::VectorXd;
 using namespace std;
 
 class Tools {
+private:
+    VectorXd residue_;
+    int last_estimation_size_;
+
 public:
   /**
   * Constructor.

@@ -5,7 +5,11 @@ using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using std::vector;
 
-Tools::Tools() {}
+Tools::Tools() {
+    residue_ = VectorXd(4);
+    residue_ << 0, 0, 0, 0;
+    last_estimation_size_ = 0;
+}
 
 Tools::~Tools() {}
 
@@ -15,13 +19,14 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
     VectorXd rmse(4);
     rmse << 0,0,0,0;
 
-    for(int i=0; i < estimations.size(); ++i){
+    for(int i=last_estimation_size_; i < estimations.size(); ++i){
         VectorXd err = estimations[i] - ground_truth[i];
         err = err.array() * err.array();
-        rmse += err;
+        residue_ += err;
     }
+    last_estimation_size_ = estimations.size();
 
-    rmse = rmse / estimations.size();
+    rmse = residue_ / estimations.size();
     rmse = rmse.array().sqrt();
     return rmse;
 
